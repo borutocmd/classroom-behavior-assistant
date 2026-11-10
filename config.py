@@ -76,8 +76,9 @@ SMOOTH_WINDOW = 5         # 滑窗长度（帧数，1 fps 时约 5 秒）
 MIN_EVENT_FRAMES = 2      # 事件最短持续帧数，过滤抖动
 
 # ---------- 报告生成 ----------
-QWEN_DIR = Path("/home/muli/project/NLP_lab/models/Qwen3.5-0.8B")
-EMBED_DIR = Path("/home/muli/project/NLP_lab/models/embeddings_model")
+# 模型目录：默认指向项目内 models/（不入库），可用环境变量覆盖
+QWEN_DIR = Path(os.environ.get("QWEN_DIR", PROJECT_ROOT / "models" / "Qwen3.5-0.8B"))
+EMBED_DIR = Path(os.environ.get("EMBED_DIR", PROJECT_ROOT / "models" / "embeddings_model"))
 MAX_NEW_TOKENS = 320
 TOP_K_TIPS = 3            # 检索到的教学建议条数
 WEB_HOST = "127.0.0.1"

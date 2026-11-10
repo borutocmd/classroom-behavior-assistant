@@ -7,7 +7,8 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
 DATA_ROOT = Path(os.environ.get("CLASSROOM_DATA", Path.home() / "project" / "classroom_data"))
-NLP_LAB = Path("/home/muli/project/NLP_lab")
+sys.path.insert(0, str(PROJECT))
+from config import EMBED_DIR, QWEN_DIR  # noqa: E402  单一事实来源
 
 ok = True
 
@@ -49,9 +50,9 @@ for path in [PROJECT, DATA_ROOT, DATA_ROOT / "frames", DATA_ROOT / "weights"]:
     check(str(path), lambda p=path: "存在" if p.exists() else (_ for _ in ()).throw(FileNotFoundError("不存在")))
 
 print("== 4. 可复用资产 ==")
-check("本地 Qwen3.5-0.8B", lambda: "存在" if (NLP_LAB / "models/Qwen3.5-0.8B").exists()
+check("本地 Qwen3.5-0.8B", lambda: "存在" if QWEN_DIR.exists()
       else (_ for _ in ()).throw(FileNotFoundError("未找到，报告生成会失败")))
-check("bge-small-zh 向量模型", lambda: "存在" if (NLP_LAB / "models/embeddings_model").exists()
+check("bge-small-zh 向量模型", lambda: "存在" if EMBED_DIR.exists()
       else (_ for _ in ()).throw(FileNotFoundError("未找到，教学建议检索会失败")))
 
 print()
