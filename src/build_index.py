@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把教学建议知识库编码成向量并建 FAISS 索引（复用 Day03 的检索思路）。
+"""把教学建议知识库编码成向量并建 FAISS 索引。
 
 用法：
     python src/build_index.py

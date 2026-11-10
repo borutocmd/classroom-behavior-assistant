@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""评价指标与混淆矩阵绘图。混淆矩阵是大纲要求的最低验收项之一。"""
+"""评价指标与混淆矩阵绘图，用于定位类别之间的混淆。"""
 import json
 import sys
 from pathlib import Path

@@ -82,7 +82,7 @@ EMBED_DIR = Path(os.environ.get("EMBED_DIR", PROJECT_ROOT / "models" / "embeddin
 MAX_NEW_TOKENS = 320
 TOP_K_TIPS = 3            # 检索到的教学建议条数
 WEB_HOST = "127.0.0.1"
-WEB_PORT = 8002           # 与 day06 的 8001 区分开
+WEB_PORT = 8002           # 与本地其他演示服务错开
 
 
 def ensure_dirs():

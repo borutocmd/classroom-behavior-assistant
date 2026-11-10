@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把 outputs/ 里的所有结果汇总成一页，交给写论文的组员直接用。
+"""把 outputs/ 里的所有结果汇总成一页，便于横向对比。
 
 用法：
     python src/summarize_results.py
