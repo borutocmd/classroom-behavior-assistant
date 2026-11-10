@@ -11,7 +11,7 @@ echo "==> 项目目录：$HERE"
 echo "==> 数据目录：$DATA_ROOT"
 
 # 1) 找 Python 环境：优先复用已有 venv（含 torch），否则新建
-CANDIDATES=("${CLASSROOM_VENV:-}" "/home/muli/project/NLP_lab/.venv" "$HERE/.venv")
+CANDIDATES=("${CLASSROOM_VENV:-}" "$HERE/.venv" "$HOME/.venvs/classroom")
 PY=""
 for c in "${CANDIDATES[@]}"; do
   [ -n "$c" ] && [ -x "$c/bin/python" ] && PY="$c/bin/python" && break

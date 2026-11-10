@@ -8,7 +8,7 @@
 #   CLASSROOM_DATA   数据根目录（默认 ~/project/classroom_data）
 #   EPOCHS           训练轮数（默认 15）
 set -uo pipefail
-PY="${PY:-/home/muli/project/NLP_lab/.venv/bin/python}"
+PY="${PY:-python3}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_ROOT="${CLASSROOM_DATA:-$HOME/project/classroom_data}"
 VIDEO="${1:-}"

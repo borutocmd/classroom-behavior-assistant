@@ -2,9 +2,9 @@
 # 启动演示服务（默认用真实数据目录 classroom_data）
 # 项目目录由脚本自身位置推断：文件夹改名/移动都不会失效
 set -uo pipefail
-PY=/home/muli/project/NLP_lab/.venv/bin/python
+PY="${PY:-python3}"
 PROJ="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export CLASSROOM_DATA="${CLASSROOM_DATA:-/home/muli/project/classroom_data}"
+export CLASSROOM_DATA="${CLASSROOM_DATA:-$HOME/project/classroom_data}"
 export PYTHONPATH="$PROJ"
 cd "$PROJ" || exit 1
 echo "项目目录： $PROJ"
