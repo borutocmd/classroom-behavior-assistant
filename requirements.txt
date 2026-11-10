@@ -1,0 +1,15 @@
+# 直接依赖。已装的包 pip 会自动跳过，不会重下 torch（约 2.5 GB）。
+torch>=2.4
+torchvision>=0.19
+numpy>=1.26
+Pillow>=10.0
+opencv-python-headless>=4.10,<6
+matplotlib>=3.9
+scikit-learn>=1.5
+pandas>=2.0
+transformers>=4.44
+faiss-cpu>=1.8
+jieba>=0.42
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9

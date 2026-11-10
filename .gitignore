@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 模型权重（体积大，按 docs/训练说明.md 重新训练，或自行放置）
+models/
+*.pt
+*.onnx
+
+# 字体（约 9 MB，系统自带黑体可替代）
+assets/
+
+# 运行产物
+outputs/
+*.log
+.runs/
+
+# 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

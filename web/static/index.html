@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>课堂行为辅助识别 · 演示</title>
+<style>
+:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#1f2d3d;background:#f4f6f9}
+*{box-sizing:border-box}body{margin:0;padding:26px 22px 60px}
+h1{font-size:26px;margin:0 0 6px}.muted{color:#63707d}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start;max-width:1500px;margin:0 auto}
+section{background:#fff;border:1px solid #dde3ea;border-radius:12px;padding:18px;margin-bottom:16px}
+label{display:block;font-weight:600;margin-bottom:8px}
+select,button{font:inherit;padding:9px 12px;border:1px solid #b9c4d0;border-radius:8px;background:#fff}
+button{cursor:pointer}button:hover{background:#eef4fb}
+#submit{background:#21684a;color:#fff;border:0}#submit:disabled{opacity:.5;cursor:wait}
+#status{margin-left:12px;color:#63707d}
+table{border-collapse:collapse;width:100%;font-size:14px}
+td,th{padding:8px;border-bottom:1px solid #eaeff5;text-align:left}
+img{max-width:100%;border-radius:8px;border:1px solid #e2e8f0}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.75 ui-monospace,monospace;background:#fafcfe;padding:14px;border-radius:8px}
+.tip{border-left:3px solid #3e8c64;padding:4px 14px;margin:10px 0;background:#f8fbf9}
+.error{color:#a52e2e}
+/* 右侧 pipeline 面板 */
+aside{position:sticky;top:20px}
+#pipe{background:#fff;border:1px solid #dde3ea;border-radius:12px;padding:16px}
+#pipe h2{font-size:17px;margin:0 0 12px}
+.bar{height:8px;background:#eef2f6;border-radius:99px;overflow:hidden;margin:10px 0 14px}
+#barfill{height:100%;width:0;background:linear-gradient(90deg,#3e8c64,#7fb99b);transition:width .35s}
+.stage{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:13.5px;color:#7a8794}
+.stage .dot{width:18px;height:18px;border-radius:50%;border:2px solid #cfd8e2;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;margin-top:1px}
+.stage.done{color:#1f2d3d}.stage.done .dot{background:#3e8c64;border-color:#3e8c64}
+.stage.now{color:#14503a;font-weight:600}.stage.now .dot{background:#e4b363;border-color:#e4b363}
+#detail{font-size:12.5px;color:#5a716a;background:#f6f9f7;border-radius:7px;padding:9px 11px;
+  margin-top:10px;min-height:38px}
+#timer{font-size:12.5px;color:#7a8794;margin-top:6px}
+/* 识别前/后对比 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.pair{background:#fbfdfe;border:1px solid #e6edf3;border-radius:10px;padding:10px}
+.pair .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair figure{margin:0}
+.pair figcaption{font-size:12px;color:#63707d;text-align:center;padding-top:5px}
+.tag{display:inline-block;font-size:12px;background:#eef4f1;color:#14503a;border-radius:6px;padding:2px 8px}
+</style>
+</head>
+<body>
+<div class="layout">
+  <main>
+    <h1>课堂行为辅助识别</h1>
+    <p class="muted">选一段经授权的课堂短视频，系统输出行为时间线、课堂统计与观察报告。模型：ResNet18 迁移学习（宏 F1 0.78）+ 本地 Qwen3.5-0.8B。</p>
+
+    <section>
+      <label for="video">演示视频</label>
+      <select id="video"></select>
+      <label style="margin-top:14px"><input type="checkbox" id="withReport" checked> 同时生成课堂观察报告（本地大模型，约多花 15 秒）</label>
+      <div style="margin-top:14px">
+        <button id="submit" type="button">开始分析</button>
+        <span id="status">请选择视频</span>
+      </div>
+    </section>
+
+    <div id="result" hidden>
+      <section>
+        <h2>识别前 / 识别后 对比</h2>
+        <p class="muted" style="margin-top:-6px">随机从视频里抽取的帧：左边是原始画面，右边是模型判定的行为与置信度。</p>
+        <div class="pairs" id="pairs"></div>
+      </section>
+      <section>
+        <h2>行为时间线</h2>
+        <img id="timeline" alt="行为时间线">
+        <p id="smoothRate" class="muted"></p>
+      </section>
+      <section>
+        <h2>课堂统计</h2>
+        <div class="scroll"><table id="stats"></table></div>
+      </section>
+      <section>
+        <h2>课堂观察报告</h2>
+        <pre id="report"></pre>
+      </section>
+      <section>
+        <h2>依据的教学建议</h2>
+        <div id="tips"></div>
+      </section>
+    </div>
+  </main>
+
+  <aside>
+    <div id="pipe">
+      <h2>Pipeline 运行状态</h2>
+      <div class="bar"><div id="barfill"></div></div>
+      <div id="stages"></div>
+      <div id="detail">等待开始…</div>
+      <div id="timer"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const STAGES = ["接收请求", "读取视频并抽帧", "逐帧行为分类", "时序平滑", "课堂统计",
+                "生成对比图", "检索教学建议", "生成观察报告", "整理结果"];
+let polling = null;
+
+function renderStages(idx, error) {
+  $('stages').innerHTML = STAGES.map((name, i) => {
+    let cls = 'stage', mark = '';
+    if (error && i === idx) { cls += ' now'; mark = '!'; }
+    else if (i < idx) { cls += ' done'; mark = '✓'; }
+    else if (i === idx) { cls += ' now'; mark = '●'; }
+    return `<div class="${cls}"><span class="dot">${mark}</span><span>${i + 1}. ${name}</span></div>`;
+  }).join('');
+}
+
+function applyProgress(p) {
+  const idx = p.stage_index ?? 0;
+  renderStages(idx, p.error);
+  $('barfill').style.width = (p.percent ?? 0) + '%';
+  $('detail').textContent = p.error ? ('出错：' + p.error) : (p.detail || p.stage || '等待开始…');
+  $('timer').textContent = p.running ? `已运行 ${p.elapsed || 0} 秒` :
+    (p.finished ? `完成，共 ${p.elapsed || 0} 秒` : '');
+}
+
+async function pollProgress() {
+  try {
+    const r = await fetch('/progress', { cache: 'no-store' });
+    applyProgress(await r.json());
+  } catch (e) { /* 忽略瞬时错误 */ }
+}
+
+fetch('/examples').then(r => r.json()).then(data => {
+  const sel = $('video');
+  sel.innerHTML = '';
+  data.videos.forEach(v => {
+    const option = document.createElement('option');
+    option.value = v.path;
+    option.textContent = `${v.label} / ${v.name}（${v.size_mb} MB）`;
+    sel.append(option);
+  });
+  $('status').textContent = data.total ? `共 ${data.total} 段可选` : '数据目录里还没有视频';
+}).catch(e => $('status').textContent = '读取列表失败：' + e.message);
+
+function renderStats(stats) {
+  const rows = [
+    ['时长（秒）', stats['时长秒']], ['采样帧数', stats['帧数']],
+    ['抬头率', (stats['抬头率'] * 100).toFixed(1) + '%'],
+    ['低头率', (stats['低头率'] * 100).toFixed(1) + '%'],
+    ['低头时长（秒）', stats['低头时长秒']],
+    ['举手次数', stats['举手次数']], ['使用手机次数', stats['手机次数']],
+    ['平均置信度', stats['平均置信度']],
+    ['平滑前后一致率', (stats['平滑前后一致率'] * 100).toFixed(1) + '%'],
+  ];
+  const dist = Object.entries(stats['各类占比']).map(([k, v]) => `${k} ${(v * 100).toFixed(1)}%`).join(' ｜ ');
+  $('stats').innerHTML = rows.map(([k, v]) => `<tr><th style="width:38%">${k}</th><td>${v}</td></tr>`).join('')
+    + `<tr><th>行为分布</th><td>${dist}</td></tr>`;
+}
+
+function renderPairs(pairs) {
+  $('pairs').innerHTML = (pairs || []).map(p => `
+    <div class="pair">
+      <div class="two">
+        <figure><img src="${p.before}" alt="识别前"><figcaption>识别前 · 第${p.index}帧</figcaption></figure>
+        <figure><img src="${p.after}" alt="识别后"><figcaption>识别后 · ${p.second}秒</figcaption></figure>
+      </div>
+      <div style="text-align:center;padding-top:8px">
+        <span class="tag">${p.label} ${(p.confidence * 100).toFixed(0)}%</span>
+        <span class="tag" style="background:#f2f6f9;color:#4a5b68">平滑后 ${p.smooth_label}</span>
+      </div>
+    </div>`).join('') || '<p class="muted">本次没有生成对比图。</p>';
+}
+
+$('submit').onclick = async () => {
+  const video = $('video').value;
+  if (!video) return;
+  $('submit').disabled = true;
+  $('status').className = '';
+  $('status').textContent = '分析中，请看右侧进度…';
+  $('result').hidden = true;
+  applyProgress({ stage_index: 0, percent: 0, detail: '已提交，等待后端开始…', running: true, elapsed: 0 });
+  polling = setInterval(pollProgress, 400);
+  pollProgress();
+  try {
+    const response = await fetch('/analyze', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video, fps: 1.0, with_report: $('withReport').checked })
+    });
+    if (!response.ok) throw Error('服务返回 ' + response.status);
+    const data = await response.json();
+    $('timeline').src = data.timeline_image + '?t=' + Date.now();
+    $('smoothRate').textContent = `平滑前后一致率 ${(data.stats['平滑前后一致率'] * 100).toFixed(1)}%，`
+      + `处理耗时 ${(data.duration_ms / 1000).toFixed(2)} 秒，模型 ${data.stats['模型']}`;
+    renderStats(data.stats);
+    renderPairs(data.comparisons);
+    $('report').textContent = data.report || '（本次未生成报告）';
+    $('tips').innerHTML = (data.tips || []).map(t =>
+      `<div class="tip"><strong>[${t.citation}] ${t.title}</strong>（相似度 ${t.score}）<div>${t.content}</div></div>`
+    ).join('') || '<p class="muted">无</p>';
+    $('result').hidden = false;
+    $('status').textContent = '已完成';
+  } catch (e) {
+    $('status').textContent = e.message;
+    $('status').className = 'error';
+  } finally {
+    $('submit').disabled = false;
+    if (polling) { clearInterval(polling); polling = null; }
+    pollProgress();
+  }
+};
+</script>
+</body>
+</html>
