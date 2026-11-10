@@ -19,7 +19,7 @@ WEIGHT_DIR = Path(os.environ.get("CLASSROOM_WEIGHTS", Path.home() / "project" / 
 
 LABELS_CSV = DATA_ROOT / "labels.csv"  # file,label,split
 SPLITS_JSON = DATA_ROOT / "splits.json"
-MODEL_DIR = PROJECT_ROOT / "models"    # 训练产物（随代码提交）
+MODEL_DIR = PROJECT_ROOT / "models"    # 训练产物（不入库）
 OUTPUT_DIR = PROJECT_ROOT / "outputs"  # 指标、图表、报告
 KB_DIR = PROJECT_ROOT / "kb"           # 教学建议知识库
 
