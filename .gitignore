@@ -22,3 +22,12 @@ outputs/
 Thumbs.db
 .idea/
 .vscode/
+
+# ---------- 密钥 / 环境变量（禁止入库）----------
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+secrets.yaml
+credentials.json
